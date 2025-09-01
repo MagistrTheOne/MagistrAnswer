@@ -198,7 +198,7 @@ class GamePrometheusBot:
    • Знаток: 50-99 очков
    • Мастер боли: 100+ очков
 
-📱 **Команды:**
+📱 **Основные команды:**
    /start - Главное меню
    /play - Начать игру
    /ask - Задать вопрос
@@ -206,10 +206,237 @@ class GamePrometheusBot:
    /stats - Статистика
    /help - Эта помощь
 
+🎭 **РОФЛО-команды:**
+   /rofl - 🎭 Рофло вопрос
+   /bazar - 🗣️ Иу это базаришь да?
+   /shiza - 🧘 Креативное шиза
+   /vazshe - 🤔 Полный рофло-анализ
+
 🎭 **Цель:** Стань лучшим аналитиком боли и генератором SaaS-решений!
         """
         
         await update.message.reply_text(help_text, parse_mode='Markdown')
+    
+    async def rofl_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /rofl - рофло вопрос"""
+        user_id = update.effective_user.id
+        
+        if user_id not in self.user_sessions:
+            await update.message.reply_text("❌ Сначала используйте /start")
+            return
+        
+        # Получаем случайный рофло-вопрос
+        question_data = self.question_parser.get_random_question()
+        
+        if not question_data:
+            await update.message.reply_text("❌ Не удалось получить рофло-вопрос. Попробуйте позже.")
+            return
+        
+        # Анализируем боль с рофло-стилем
+        pain_analysis = self.pain_analyzer.analyze_pain(question_data['text'])
+        
+        # Генерируем максимально рофло-решение
+        solution = self.solution_generator.generate_solution(pain_analysis)
+        
+        # Рофло-рейтинг
+        rofl_level = self._calculate_rofl_level(pain_analysis, solution)
+        
+        rofl_text = f"""
+🎭 **РОФЛО-ВОПРОС МАГИСТРА:**
+
+❓ **Вопрос:** {question_data['text']}
+📍 **Источник:** {question_data['source']}
+
+💔 **Анализ боли (рофло-стиль):**
+   🚨 Основная боль: {pain_analysis['main_pain']}
+   🎭 Эмоции: {', '.join(pain_analysis['emotions']) if pain_analysis['emotions'] else 'не определены'}
+   ⚡ Срочность: {pain_analysis['urgency_level']}
+   🚨 Серьезность: {pain_analysis['severity_level']}
+
+💡 **РОФЛО-SaaS-решение:**
+   🚀 **{solution['name']}**
+   {solution['full_solution']}
+
+🎯 **РОФЛО-рейтинг:**
+   {rofl_level['stars']} **Уровень рофла:** {rofl_level['description']}
+   💰 **Оценка стартапа:** {rofl_level['startup_value']}
+   🚀 **Готовность к IPO:** {rofl_level['ipo_readiness']}
+   ⏰ **Время до выхода:** {rofl_level['exit_time']}
+
+🎭 **Магистр сказал:** {rofl_level['magistr_quote']}
+        """
+        
+        keyboard = [
+            [InlineKeyboardButton("🎭 Еще рофло", callback_data="more_rofl")],
+            [InlineKeyboardButton("🎮 Играть", callback_data="start_game")],
+            [InlineKeyboardButton("📊 Статистика", callback_data="show_stats")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(rofl_text, reply_markup=reply_markup, parse_mode='Markdown')
+    
+    async def bazar_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /bazar - агрессивный анализ"""
+        user_id = update.effective_user.id
+        
+        if user_id not in self.user_sessions:
+            await update.message.reply_text("❌ Сначала используйте /start")
+            return
+        
+        # Получаем случайный вопрос
+        question_data = self.question_parser.get_random_question()
+        
+        if not question_data:
+            await update.message.reply_text("❌ Не удалось получить вопрос для базара.")
+            return
+        
+        # Агрессивный анализ
+        pain_analysis = self.pain_analyzer.analyze_pain(question_data['text'])
+        
+        bazar_text = f"""
+🗣️ **ИУ ЭТО БАЗАРИШЬ ДА?**
+
+❓ **Вопрос:** {question_data['text']}
+
+💥 **АГРЕССИВНЫЙ АНАЛИЗ:**
+   🚨 **БОЛЬ:** {pain_analysis['main_pain'].upper()}
+   😤 **ЭМОЦИИ:** {', '.join(pain_analysis['emotions']).upper() if pain_analysis['emotions'] else 'НЕ ОПРЕДЕЛЕНЫ'}
+   ⚡ **СРОЧНОСТЬ:** {pain_analysis['urgency_level'].upper()}
+   🚨 **СЕРЬЕЗНОСТЬ:** {pain_analysis['severity_level'].upper()}
+
+💡 **БАЗАР-РЕШЕНИЕ:**
+   🚀 **{self._generate_bazar_solution_name(pain_analysis)}**
+   {self._generate_bazar_solution(pain_analysis)}
+
+🎯 **БАЗАР-СТАТИСТИКА:**
+   💪 **Уровень базара:** {self._calculate_bazar_level(pain_analysis)}
+   🗣️ **Готовность к базару:** 100%
+   🚀 **IPO через:** {random.choice(['завтра', 'через неделю', 'уже вчера'])}
+        """
+        
+        keyboard = [
+            [InlineKeyboardButton("🗣️ Еще базар", callback_data="more_bazar")],
+            [InlineKeyboardButton("🎮 Играть", callback_data="start_game")],
+            [InlineKeyboardButton("📊 Статистика", callback_data="show_stats")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(bazar_text, reply_markup=reply_markup, parse_mode='Markdown')
+    
+    async def shiza_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /shiza - креативное шиза"""
+        user_id = update.effective_user.id
+        
+        if user_id not in self.user_sessions:
+            await update.message.reply_text("❌ Сначала используйте /start")
+            return
+        
+        # Получаем случайный вопрос
+        question_data = self.question_parser.get_random_question()
+        
+        if not question_data:
+            await update.message.reply_text("❌ Не удалось получить вопрос для шизы.")
+            return
+        
+        # Креативный анализ
+        pain_analysis = self.pain_analyzer.analyze_pain(question_data['text'])
+        
+        # Генерируем максимально креативное решение
+        solution = self.solution_generator.generate_solution(pain_analysis)
+        
+        shiza_text = f"""
+🧘 **КРЕАТИВНОЕ ШИЗА:**
+
+❓ **Вопрос:** {question_data['text']}
+
+🧠 **КРЕАТИВНЫЙ АНАЛИЗ:**
+   💫 **БОЛЬ:** {pain_analysis['main_pain']}
+   🌈 **ЭМОЦИИ:** {', '.join(pain_analysis['emotions']) if pain_analysis['emotions'] else 'не определены'}
+   ✨ **СРОЧНОСТЬ:** {pain_analysis['urgency_level']}
+   🌟 **СЕРЬЕЗНОСТЬ:** {pain_analysis['severity_level']}
+
+💡 **КРЕАТИВНОЕ ШИЗА-РЕШЕНИЕ:**
+   🚀 **{solution['name']}**
+   {solution['full_solution']}
+
+🎨 **КРЕАТИВНОСТЬ:**
+   🌈 **Уровень креатива:** {self._calculate_creativity_level(pain_analysis)}
+   🧘 **Шиза-коэффициент:** {random.randint(80, 120)}%
+   💫 **Готовность к креативу:** Бесконечность%
+   🚀 **IPO через:** {random.choice(['когда-нибудь', 'в параллельной вселенной', 'уже произошло'])}
+        """
+        
+        keyboard = [
+            [InlineKeyboardButton("🧘 Еще шиза", callback_data="more_shiza")],
+            [InlineKeyboardButton("🎮 Играть", callback_data="start_game")],
+            [InlineKeyboardButton("📊 Статистика", callback_data="show_stats")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(shiza_text, reply_markup=reply_markup, parse_mode='Markdown')
+    
+    async def vazshe_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /vazshe - полный рофло-анализ"""
+        user_id = update.effective_user.id
+        
+        if user_id not in self.user_sessions:
+            await update.message.reply_text("❌ Сначала используйте /start")
+            return
+        
+        # Получаем случайный вопрос
+        question_data = self.question_parser.get_random_question()
+        
+        if not question_data:
+            await update.message.reply_text("❌ Не удалось получить вопрос для ваще.")
+            return
+        
+        # Полный анализ
+        pain_analysis = self.pain_analyzer.analyze_pain(question_data['text'])
+        solution = self.solution_generator.generate_solution(pain_analysis)
+        
+        # Рофло-рейтинг
+        rofl_level = self._calculate_rofl_level(pain_analysis, solution)
+        
+        vazshe_text = f"""
+🤔 **ВАЩЕ ПОЛНЫЙ РОФЛО-АНАЛИЗ:**
+
+❓ **Вопрос:** {question_data['text']}
+📍 **Источник:** {question_data['source']}
+
+🧠 **АНАЛИЗ БОЛИ:**
+   💔 Основная боль: {pain_analysis['main_pain']}
+   📊 Уверенность: {pain_analysis['confidence_score']:.0%}
+   🎭 Эмоции: {', '.join(pain_analysis['emotions']) if pain_analysis['emotions'] else 'не определены'}
+   ⚡ Срочность: {pain_analysis['urgency_level']}
+   🚨 Серьезность: {pain_analysis['severity_level']}
+   🎯 Тип вопроса: {pain_analysis['question_type']}
+
+💡 **SaaS-РЕШЕНИЕ:**
+   🚀 **{solution['name']}**
+   {solution['full_solution']}
+   🎯 Решает боль: {solution['pain_addressed']}
+
+🎭 **РОФЛО-СТАТИСТИКА:**
+   {rofl_level['stars']} **Уровень рофла:** {rofl_level['description']}
+   💰 **Оценка стартапа:** {rofl_level['startup_value']}
+   🚀 **Готовность к IPO:** {rofl_level['ipo_readiness']}
+   ⏰ **Время до выхода:** {rofl_level['exit_time']}
+   🎯 **Коэффициент рофла:** {random.randint(50, 200)}%
+
+💡 **Рекомендации:**
+{chr(10).join([f"   • {rec}" for rec in pain_analysis['recommendations'][:3]])}
+
+🎭 **Магистр сказал:** {rofl_level['magistr_quote']}
+        """
+        
+        keyboard = [
+            [InlineKeyboardButton("🤔 Еще ваще", callback_data="more_vazshe")],
+            [InlineKeyboardButton("🎮 Играть", callback_data="start_game")],
+            [InlineKeyboardButton("📊 Статистика", callback_data="show_stats")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(vazshe_text, reply_markup=reply_markup, parse_mode='Markdown')
     
     async def button_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик нажатий на кнопки"""
@@ -239,6 +466,16 @@ class GamePrometheusBot:
             await self.start_game_round(query, user_id)
         elif query.data == "end_game":
             await self.end_game(query, user_id)
+        elif query.data == "more_rofl":
+            await self.rofl_command(query, context)
+        elif query.data == "more_bazar":
+            await self.bazar_command(query, context)
+        elif query.data == "more_shiza":
+            await self.shiza_command(query, context)
+        elif query.data == "more_vazshe":
+            await self.vazshe_command(query, context)
+        elif query.data == "main_menu":
+            await self.start(query, context)
     
     async def message_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик текстовых сообщений"""
@@ -470,6 +707,10 @@ class GamePrometheusBot:
         application.add_handler(CommandHandler("category", self.category_command))
         application.add_handler(CommandHandler("stats", self.stats_command))
         application.add_handler(CommandHandler("help", self.help_command))
+        application.add_handler(CommandHandler("rofl", self.rofl_command))
+        application.add_handler(CommandHandler("bazar", self.bazar_command))
+        application.add_handler(CommandHandler("shiza", self.shiza_command))
+        application.add_handler(CommandHandler("vazshe", self.vazshe_command))
         
         application.add_handler(CallbackQueryHandler(self.button_handler))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.message_handler))
