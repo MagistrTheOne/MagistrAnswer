@@ -24,6 +24,16 @@ class QuestionParser:
             "https://otvet.mail.ru/question",
             "https://otvet.mail.ru/answer"
         ]
+        
+        # Игровые категории вопросов
+        self.game_categories = {
+            'любовь': ['отношения', 'любовь', 'брак', 'семья', 'свидание'],
+            'работа': ['карьера', 'работа', 'бизнес', 'деньги', 'зарплата'],
+            'здоровье': ['здоровье', 'болезнь', 'врач', 'лечение', 'диета'],
+            'образование': ['учеба', 'экзамен', 'школа', 'университет', 'знания'],
+            'технологии': ['компьютер', 'интернет', 'смартфон', 'программа', 'гаджет'],
+            'путешествия': ['путешествие', 'отпуск', 'поездка', 'страна', 'город']
+        }
     
     def get_random_question(self) -> Optional[Dict[str, str]]:
         """Получает случайный вопрос с Answer Mail.ru"""
@@ -58,6 +68,47 @@ class QuestionParser:
         
         print("❌ Не удалось получить вопросы ни с одного URL")
         return None
+    
+    def process_user_question(self, user_question: str) -> Dict[str, str]:
+        """Обрабатывает вопрос от пользователя"""
+        return {
+            'text': user_question,
+            'source': 'Пользователь',
+            'type': 'custom'
+        }
+    
+    def get_question_by_category(self, category: str) -> Optional[Dict[str, str]]:
+        """Получает вопрос по игровой категории"""
+        if category.lower() in self.game_categories:
+            # Ищем вопросы с ключевыми словами категории
+            for url in self.urls:
+                try:
+                    response = self.session.get(url, timeout=15)
+                    response.raise_for_status()
+                    
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    questions = self._extract_questions_by_category(soup, category)
+                    
+                    if questions:
+                        question = random.choice(questions)
+                        return {
+                            'text': question['text'],
+                            'source': 'Answer Mail.ru',
+                            'type': 'category',
+                            'category': category
+                        }
+                        
+                except Exception as e:
+                    continue
+        
+        return None
+    
+    def get_random_question_by_category(self, category: str = None) -> Optional[Dict[str, str]]:
+        """Получает случайный вопрос по категории или общий"""
+        if category and category.lower() in self.game_categories:
+            return self.get_question_by_category(category)
+        else:
+            return self.get_random_question()
     
     def _extract_questions(self, soup: BeautifulSoup) -> List[Dict[str, str]]:
         """Извлекает вопросы из HTML с расширенными селекторами"""
@@ -105,6 +156,28 @@ class QuestionParser:
         # Если не нашли по селекторам, ищем по тексту
         if not questions:
             questions = self._extract_questions_by_text(soup)
+        
+        return questions
+    
+    def _extract_questions_by_category(self, soup: BeautifulSoup, category: str) -> List[Dict[str, str]]:
+        """Извлекает вопросы по конкретной категории"""
+        questions = []
+        keywords = self.game_categories.get(category.lower(), [])
+        
+        # Ищем все ссылки с текстом
+        links = soup.find_all('a', href=True)
+        
+        for link in links:
+            text = link.get_text(strip=True)
+            if text and len(text) > 20 and len(text) < 150:
+                # Проверяем, что текст содержит ключевые слова категории
+                if any(keyword in text.lower() for keyword in keywords):
+                    questions.append({
+                        'text': text,
+                        'source': 'Answer Mail.ru'
+                    })
+                    if len(questions) >= 10:
+                        break
         
         return questions
     

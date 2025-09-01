@@ -16,6 +16,7 @@ from parsers.question_parser import QuestionParser
 from analyzers.pain_analyzer import PainAnalyzer
 from generators.solution_generator import SolutionGenerator
 from telegram_bot.bot import PrometheusBot
+from telegram_bot.game_bot import GamePrometheusBot
 import config
 
 class PrometheusOrchestrator:
@@ -57,6 +58,8 @@ class PrometheusOrchestrator:
             print(f"📊 **Уверенность:** {pain_analysis['confidence_score']:.0%}")
             print(f"🎭 **Эмоции:** {', '.join(pain_analysis['emotions']) if pain_analysis['emotions'] else 'не определены'}")
             print(f"⚡ **Срочность:** {pain_analysis['urgency_level']}")
+            print(f"🚨 **Серьезность:** {pain_analysis['severity_level']}")
+            print(f"🎯 **Тип вопроса:** {pain_analysis['question_type']}")
             print("-" * 60)
             
             # Генерируем решение
@@ -67,6 +70,13 @@ class PrometheusOrchestrator:
             print(f"💡 **Решение:** {solution['full_solution']}")
             print(f"🎯 **Решает боль:** {solution['pain_addressed']}")
             print("-" * 60)
+            
+            # Показываем рекомендации
+            if pain_analysis.get('recommendations'):
+                print("💡 **Рекомендации:**")
+                for i, rec in enumerate(pain_analysis['recommendations'][:3], 1):
+                    print(f"   {i}. {rec}")
+                print("-" * 60)
             
             # Обновляем статистику
             self.stats['questions_processed'] += 1
@@ -93,9 +103,15 @@ class PrometheusOrchestrator:
             self.question_parser.close()
     
     def run_telegram_bot(self):
-        """Запускает Telegram-бота"""
-        print("🤖 Запускаю Telegram-бота...")
+        """Запускает обычного Telegram-бота"""
+        print("🤖 Запускаю обычного Telegram-бота...")
         bot = PrometheusBot()
+        bot.run()
+    
+    def run_game_bot(self):
+        """Запускает игрового Telegram-бота"""
+        print("🎮 Запускаю игрового Telegram-бота...")
+        bot = GamePrometheusBot()
         bot.run()
     
     def run_interactive_mode(self):
@@ -110,7 +126,8 @@ class PrometheusOrchestrator:
             print("3. 💡 SaaS-решение")
             print("4. 🎯 Полный анализ")
             print("5. 📊 Статистика")
-            print("6. 🤖 Запустить Telegram-бота")
+            print("6. 🤖 Запустить обычного Telegram-бота")
+            print("7. 🎮 Запустить игрового Telegram-бота")
             print("0. Выход")
             
             choice = input("\nВаш выбор: ").strip()
@@ -126,8 +143,12 @@ class PrometheusOrchestrator:
             elif choice == "5":
                 self._show_statistics()
             elif choice == "6":
-                print("🤖 Переключаюсь на Telegram-бота...")
+                print("🤖 Переключаюсь на обычного Telegram-бота...")
                 self.run_telegram_bot()
+                break
+            elif choice == "7":
+                print("🎮 Переключаюсь на игрового Telegram-бота...")
+                self.run_game_bot()
                 break
             elif choice == "0":
                 print("👋 До свидания!")
@@ -169,6 +190,14 @@ class PrometheusOrchestrator:
             print(f"📊 **Уверенность:** {pain_analysis['confidence_score']:.0%}")
             print(f"🎭 **Эмоции:** {', '.join(pain_analysis['emotions']) if pain_analysis['emotions'] else 'не определены'}")
             print(f"⚡ **Срочность:** {pain_analysis['urgency_level']}")
+            print(f"🚨 **Серьезность:** {pain_analysis['severity_level']}")
+            print(f"🎯 **Тип вопроса:** {pain_analysis['question_type']}")
+            
+            if pain_analysis.get('recommendations'):
+                print("💡 **Рекомендации:**")
+                for i, rec in enumerate(pain_analysis['recommendations'][:3], 1):
+                    print(f"   {i}. {rec}")
+            
             self.stats['pain_analyses'] += 1
         else:
             print("🧠 Анализ боли уже выполнен.")
@@ -239,11 +268,14 @@ def main():
         elif mode == "bot":
             orchestrator = PrometheusOrchestrator()
             orchestrator.run_telegram_bot()
+        elif mode == "game":
+            orchestrator = PrometheusOrchestrator()
+            orchestrator.run_game_bot()
         elif mode == "interactive":
             orchestrator = PrometheusOrchestrator()
             orchestrator.run_interactive_mode()
         else:
-            print("❌ Неверный режим. Используйте: cli, bot, или interactive")
+            print("❌ Неверный режим. Используйте: cli, bot, game, или interactive")
     else:
         # По умолчанию запускаем интерактивный режим
         orchestrator = PrometheusOrchestrator()
