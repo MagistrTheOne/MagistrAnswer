@@ -211,6 +211,7 @@ class GamePrometheusBot:
    /bazar - 🗣️ Иу это базаришь да?
    /shiza - 🧘 Креативное шиза
    /vazshe - 🤔 Полный рофло-анализ
+   /demo50 - 🚀 Демо 50 рофло-вопросов
 
 🎭 **Цель:** Стань лучшим аналитиком боли и генератором SaaS-решений!
         """
@@ -711,6 +712,7 @@ class GamePrometheusBot:
         application.add_handler(CommandHandler("bazar", self.bazar_command))
         application.add_handler(CommandHandler("shiza", self.shiza_command))
         application.add_handler(CommandHandler("vazshe", self.vazshe_command))
+        application.add_handler(CommandHandler("demo50", self.demo50_command))
         
         application.add_handler(CallbackQueryHandler(self.button_handler))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.message_handler))
@@ -718,3 +720,116 @@ class GamePrometheusBot:
         # Запускаем бота
         logger.info("Игровой бот запущен!")
         application.run_polling()
+    
+    async def demo50_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /demo50 - демонстрация 50 рофло-вопросов"""
+        user_id = update.effective_user.id
+        
+        if user_id not in self.user_sessions:
+            await update.message.reply_text("❌ Сначала используйте /start")
+            return
+        
+        await update.message.reply_text("🎭 **Запускаю демонстрацию 50 рофло-вопросов...**\n\nЭто займет несколько секунд! ⏳", parse_mode='Markdown')
+        
+        # Получаем 50 вопросов
+        questions = self.question_parser.get_multiple_questions(50)
+        
+        # Генерируем решения для каждого вопроса
+        demo_results = []
+        for i, question in enumerate(questions[:50], 1):
+            try:
+                # Анализируем боль
+                pain_analysis = self.pain_analyzer.analyze_pain(question['text'])
+                
+                # Генерируем решение
+                solution = self.solution_generator.generate_solution(pain_analysis)
+                
+                # Рофло-рейтинг
+                rofl_level = self._calculate_rofl_level(pain_analysis, solution)
+                
+                demo_results.append({
+                    'number': i,
+                    'question': question,
+                    'pain_analysis': pain_analysis,
+                    'solution': solution,
+                    'rofl_level': rofl_level
+                })
+                
+                # Показываем прогресс каждые 10 вопросов
+                if i % 10 == 0:
+                    progress_text = f"🎯 **Обработано вопросов:** {i}/50\n🚀 **Продолжаем анализ...**"
+                    await update.message.reply_text(progress_text, parse_mode='Markdown')
+                    
+            except Exception as e:
+                # Если что-то пошло не так, добавляем простой результат
+                demo_results.append({
+                    'number': i,
+                    'question': question,
+                    'pain_analysis': {'main_pain': 'техническая ошибка', 'confidence_score': 0.1},
+                    'solution': {'name': 'ErrorBot', 'full_solution': 'Исправляет ошибки в рофло-анализе'},
+                    'rofl_level': {'stars': '🌟', 'description': 'Ошибка рофла'}
+                })
+        
+        # Показываем итоговую статистику
+        await self._show_demo50_summary(update, demo_results)
+    
+    async def _show_demo50_summary(self, update: Update, demo_results: list):
+        """Показывает итоговую статистику демонстрации"""
+        # Подсчитываем статистику
+        total_questions = len(demo_results)
+        roflo_questions = sum(1 for r in demo_results if r['question']['type'] == 'roflo')
+        real_questions = total_questions - roflo_questions
+        
+        # Средние показатели
+        avg_confidence = sum(r['pain_analysis']['confidence_score'] for r in demo_results) / total_questions
+        avg_rofl_level = sum(len(r['rofl_level']['stars']) for r in demo_results) / total_questions
+        
+        # Топ-5 самых рофло-решений
+        top_solutions = sorted(demo_results, key=lambda x: x['solution'].get('rofl_level', 0), reverse=True)[:5]
+        
+        summary_text = f"""
+🎭 **ДЕМОНСТРАЦИЯ 50 РОФЛО-ВОПРОСОВ ЗАВЕРШЕНА!**
+
+📊 **Общая статистика:**
+   • Всего вопросов: {total_questions}
+   • Рофло-вопросы: {roflo_questions}
+   • Реальные вопросы: {real_questions}
+   • Средняя уверенность: {avg_confidence:.1%}
+   • Средний рофло-уровень: {avg_rofl_level:.1f} звезд
+
+🏆 **ТОП-5 самых рофло-решений:**
+
+"""
+        
+        for i, result in enumerate(top_solutions, 1):
+            summary_text += f"""
+{i}. **{result['solution']['name']}**
+   ❓ Вопрос: {result['question']['text'][:50]}...
+   💔 Боль: {result['pain_analysis']['main_pain']}
+   {result['rofl_level']['stars']} Уровень рофла: {result['rofl_level']['description']}
+   💰 Оценка: {result['rofl_level']['startup_value']}
+"""
+        
+        summary_text += f"""
+
+🎯 **Рекомендации:**
+   • Используй /rofl для случайных рофло-вопросов
+   • Команда /bazar для агрессивного анализа
+   • /shiza для креативного шиза
+   • /vazshe для полного рофло-анализа
+
+🚀 **Готов к IPO:** {len([r for r in demo_results if 'IPO' in str(r['rofl_level'])])} решений!
+        """
+        
+        # Создаем кнопки для навигации
+        keyboard = [
+            [InlineKeyboardButton("🎭 Еще рофло", callback_data="more_rofl")],
+            [InlineKeyboardButton("🗣️ Базар", callback_data="more_bazar")],
+            [InlineKeyboardButton("🧘 Шиза", callback_data="more_shiza")],
+            [InlineKeyboardButton("🤔 Ваще", callback_data="more_vazshe")],
+            [InlineKeyboardButton("🎮 Играть", callback_data="start_game")],
+            [InlineKeyboardButton("📊 Статистика", callback_data="show_stats")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(summary_text, reply_markup=reply_markup, parse_mode='Markdown')
